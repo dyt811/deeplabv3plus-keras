@@ -15,6 +15,7 @@ from keras.models import Model
 import keras.backend as K
 from keras.engine import Layer, InputSpec
 from keras.utils import conv_utils
+from keras.backend.common import normalize_data_format
 
 rate_LRelu = 0.01
 
@@ -23,7 +24,7 @@ class BilinearUpsampling(Layer):
     def __init__(self, upsampling=(2, 2), data_format=None, **kwargs):
 
         super(BilinearUpsampling, self).__init__(**kwargs)
-        self.data_format = conv_utils.normalize_data_format(data_format)
+        self.data_format = normalize_data_format(data_format)
         self.upsampling = conv_utils.normalize_tuple(upsampling, 2, "size")
         self.input_spec = InputSpec(ndim=4)
 
@@ -53,29 +54,31 @@ class BilinearUpsampling(Layer):
 
 def xception_downsample_block(x, channels, is_top_relu=False):
     """
-    Inception Downsample block??? built using TensorFlor/Keras Functional API
+    Xception Downsample block??? built using TensorFlor/Keras Functional API
     :param x:
-    :param channels:
+    :param channels: key parameter that determine how many POINTWISE convolution happens.
     :param is_top_relu:
     :return:
     """
-    ##separable conv1
+    ##Original Depthwise, Separable ConvStack1:fewer connections, lighter model. I wonder if these can be swapped out for modified version.
     if is_top_relu:
         x = LeakyReLU(alpha=rate_LRelu)(x)
+    # DepthwiseConv2D does Conv2D in EACH channel/depth domain (i.e. RGB in color images).
+    x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
+    x = BatchNormalization()(x)
+    # Pointwise Convolution to change the dimension for let's say x*y*5 to x*y*3
+    x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
+    x = BatchNormalization()(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
+
+    ##Depthwise, Separable ConvStack2
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = LeakyReLU(alpha=rate_LRelu)(x)
 
-    ##separable conv2
-    x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
-    x = BatchNormalization()(x)
-    x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
-    x = BatchNormalization()(x)
-    x = LeakyReLU(alpha=rate_LRelu)(x)
-
-    ##separable conv3
+    ##Depthwise, Separable ConvStack3, with downsampling stride! NOTICE THE STRIDES! This is where the DOWNSAMPLING happens.
     x = DepthwiseConv2D((3, 3), strides=(2, 2), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
@@ -85,40 +88,46 @@ def xception_downsample_block(x, channels, is_top_relu=False):
 
 def res_xception_downsample_block(x, channels):
     """
-    RezNet block? Where Residual block post convolution is COMBINED to the Inception downsample block
+    Where Residual block post convolution is COMBINED to the Xception downsample block
     :param x:
     :param channels:
     :return:
     """
-    # Rez Net block
+    # Residual connections post regular convolution 2d WITH STRIDE (downsampled)
     res = Conv2D(channels, (1, 1), strides=(2, 2), padding="same", use_bias=False)(x)
     res = BatchNormalization()(res)
 
-    # Inception Downsample block
+    # Xception Downsample block (also downsampled stride 2x2 by ONCE
     x = xception_downsample_block(x, channels)
 
-    # Combination of both the RezNet block and the inception downsample block.
+    # Combination of both the residual connection block and the inception downsample block.
     x = add([x, res])
 
     return x
 
 
 def xception_block(x, channels):
-    ##separable conv1
+    """
+    Xception block without any downsampling. Notice the LACK of strides in the 3rd separable ConvStack3
+    :param x:
+    :param channels:
+    :return: x underwent THREE times of DepthWiseConv2D at 3x3
+    """
+    ##Depthwise, Separable ConvStack1
     x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
 
-    ##separable conv2
+    ##Depthwise, Separable ConvStack2
     x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
 
-    ##separable conv3
+    ##Depthwise, Separable ConvStack3
     x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
@@ -128,6 +137,12 @@ def xception_block(x, channels):
 
 
 def res_xception_block(x, channels):
+    """
+    Residual Xception block without downsampling.
+    :param x:
+    :param channels:
+    :return:
+    """
     res = x
     x = xception_block(x, channels)
     x = add([x, res])
@@ -135,10 +150,24 @@ def res_xception_block(x, channels):
 
 
 def aspp(x, input_shape, out_stride):
+    """
+    Atrous Spatial Pyramid Pooling: aka Dilated Convolution
+    :param x: the input tensor
+    :param input_shape: along with out-stride determine the final returned shape.
+    :param out_stride: along with input_shape determine the final returned shape.
+    :return: x: the output tensor after the series of operations.
+    """
+
+    print(f"ASPP b0 Shape {K.shape(x)}")
+
+    # B0 Block: Regular convolution? No Dilation?
     b0 = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     b0 = BatchNormalization()(b0)
     b0 = LeakyReLU(alpha=rate_LRelu)(b0)
 
+    print(f"ASPP b0 Shape {K.shape(b0)}")
+
+    # B1 Block: Convolution with dilation rate of 6
     b1 = DepthwiseConv2D((3, 3), dilation_rate=(6, 6), padding="same", use_bias=False)(
         x
     )
@@ -148,6 +177,9 @@ def aspp(x, input_shape, out_stride):
     b1 = BatchNormalization()(b1)
     b1 = LeakyReLU(alpha=rate_LRelu)(b1)
 
+    print(f"ASPP b1 Shape {K.shape(b1)}")
+
+    # B2 Block: Convolution with dilation rate of 12
     b2 = DepthwiseConv2D(
         (3, 3), dilation_rate=(12, 12), padding="same", use_bias=False
     )(x)
@@ -157,6 +189,9 @@ def aspp(x, input_shape, out_stride):
     b2 = BatchNormalization()(b2)
     b2 = LeakyReLU(alpha=rate_LRelu)(b2)
 
+    print(f"ASPP b2 Shape {K.shape(b2)}")
+
+    # B3 Block: Convolution with dilation rate of 12 again?? Why not using 18?
     b3 = DepthwiseConv2D(
         (3, 3), dilation_rate=(12, 12), padding="same", use_bias=False
     )(x)
@@ -166,14 +201,22 @@ def aspp(x, input_shape, out_stride):
     b3 = BatchNormalization()(b3)
     b3 = LeakyReLU(alpha=rate_LRelu)(b3)
 
+    print(f"ASPP b3 Shape {K.shape(b3)}")
+
+    # B4 block: ???
     out_shape = int(input_shape[0] / out_stride)
     b4 = AveragePooling2D(pool_size=(out_shape, out_shape))(x)
     b4 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b4)
     b4 = BatchNormalization()(b4)
     b4 = LeakyReLU(alpha=rate_LRelu)(b4)
+    # Special B4 layers: upsampling TO the final outershape
     b4 = BilinearUpsampling((out_shape, out_shape))(b4)
 
+    print(f"ASPP b4 Shape {K.shape(b4)}")
+
+    # Concatenate and return all. How can they have the same shape?
     x = Concatenate()([b4, b0, b1, b2, b3])
+    print(f"ASPP Final X Shape {K.shape(x)}")
     return x
 
 
@@ -185,7 +228,10 @@ def deeplabv3_plus(input_shape=(512, 512, 3), out_stride=16, num_classes=21):
     :param num_classes:
     :return:
     """
+
+    #  Obtain the shape of the input (PER image??
     img_input = Input(shape=input_shape)
+
     x = Conv2D(32, (3, 3), strides=(2, 2), padding="same", use_bias=False)(img_input)
     x = BatchNormalization()(x)
     x = LeakyReLU(alpha=rate_LRelu)(x)
