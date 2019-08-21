@@ -9,11 +9,14 @@ from keras.layers import (
     Dropout,
     AveragePooling2D,
     Concatenate,
+    LeakyReLU,
 )
 from keras.models import Model
 import keras.backend as K
 from keras.engine import Layer, InputSpec
 from keras.utils import conv_utils
+
+rate_LRelu = 0.01
 
 
 class BilinearUpsampling(Layer):
@@ -48,22 +51,29 @@ class BilinearUpsampling(Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
 
-def xception_downsample_block(x, channels, top_relu=False):
+def xception_downsample_block(x, channels, is_top_relu=False):
+    """
+    Inception Downsample block??? built using TensorFlor/Keras Functional API
+    :param x:
+    :param channels:
+    :param is_top_relu:
+    :return:
+    """
     ##separable conv1
-    if top_relu:
-        x = Activation("relu")(x)
+    if is_top_relu:
+        x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     ##separable conv2
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     ##separable conv3
     x = DepthwiseConv2D((3, 3), strides=(2, 2), padding="same", use_bias=False)(x)
@@ -74,30 +84,42 @@ def xception_downsample_block(x, channels, top_relu=False):
 
 
 def res_xception_downsample_block(x, channels):
+    """
+    RezNet block? Where Residual block post convolution is COMBINED to the Inception downsample block
+    :param x:
+    :param channels:
+    :return:
+    """
+    # Rez Net block
     res = Conv2D(channels, (1, 1), strides=(2, 2), padding="same", use_bias=False)(x)
     res = BatchNormalization()(res)
+
+    # Inception Downsample block
     x = xception_downsample_block(x, channels)
+
+    # Combination of both the RezNet block and the inception downsample block.
     x = add([x, res])
+
     return x
 
 
 def xception_block(x, channels):
     ##separable conv1
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
 
     ##separable conv2
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
 
     ##separable conv3
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(channels, (1, 1), padding="same", use_bias=False)(x)
@@ -115,40 +137,40 @@ def res_xception_block(x, channels):
 def aspp(x, input_shape, out_stride):
     b0 = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     b0 = BatchNormalization()(b0)
-    b0 = Activation("relu")(b0)
+    b0 = LeakyReLU(alpha=rate_LRelu)(b0)
 
     b1 = DepthwiseConv2D((3, 3), dilation_rate=(6, 6), padding="same", use_bias=False)(
         x
     )
     b1 = BatchNormalization()(b1)
-    b1 = Activation("relu")(b1)
+    b1 = LeakyReLU(alpha=rate_LRelu)(b1)
     b1 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b1)
     b1 = BatchNormalization()(b1)
-    b1 = Activation("relu")(b1)
+    b1 = LeakyReLU(alpha=rate_LRelu)(b1)
 
     b2 = DepthwiseConv2D(
         (3, 3), dilation_rate=(12, 12), padding="same", use_bias=False
     )(x)
     b2 = BatchNormalization()(b2)
-    b2 = Activation("relu")(b2)
+    b2 = LeakyReLU(alpha=rate_LRelu)(b2)
     b2 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b2)
     b2 = BatchNormalization()(b2)
-    b2 = Activation("relu")(b2)
+    b2 = LeakyReLU(alpha=rate_LRelu)(b2)
 
     b3 = DepthwiseConv2D(
         (3, 3), dilation_rate=(12, 12), padding="same", use_bias=False
     )(x)
     b3 = BatchNormalization()(b3)
-    b3 = Activation("relu")(b3)
+    b3 = LeakyReLU(alpha=rate_LRelu)(b3)
     b3 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b3)
     b3 = BatchNormalization()(b3)
-    b3 = Activation("relu")(b3)
+    b3 = LeakyReLU(alpha=rate_LRelu)(b3)
 
     out_shape = int(input_shape[0] / out_stride)
     b4 = AveragePooling2D(pool_size=(out_shape, out_shape))(x)
     b4 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b4)
     b4 = BatchNormalization()(b4)
-    b4 = Activation("relu")(b4)
+    b4 = LeakyReLU(alpha=rate_LRelu)(b4)
     b4 = BilinearUpsampling((out_shape, out_shape))(b4)
 
     x = Concatenate()([b4, b0, b1, b2, b3])
@@ -156,53 +178,60 @@ def aspp(x, input_shape, out_stride):
 
 
 def deeplabv3_plus(input_shape=(512, 512, 3), out_stride=16, num_classes=21):
+    """
+    The full DeepLabV3 Architectures
+    :param input_shape:
+    :param out_stride:
+    :param num_classes:
+    :return:
+    """
     img_input = Input(shape=input_shape)
     x = Conv2D(32, (3, 3), strides=(2, 2), padding="same", use_bias=False)(img_input)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = Conv2D(64, (3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     x = res_xception_downsample_block(x, 128)
 
     res = Conv2D(256, (1, 1), strides=(2, 2), padding="same", use_bias=False)(x)
     res = BatchNormalization()(res)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     skip = BatchNormalization()(x)
-    x = Activation("relu")(skip)
+    x = LeakyReLU(alpha=rate_LRelu)(skip)
     x = DepthwiseConv2D((3, 3), strides=(2, 2), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = add([x, res])
 
-    x = xception_downsample_block(x, 728, top_relu=True)
+    x = xception_downsample_block(x, 728, is_top_relu=True)
 
     for i in range(16):
         x = res_xception_block(x, 728)
 
     res = Conv2D(1024, (1, 1), padding="same", use_bias=False)(x)
     res = BatchNormalization()(res)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(728, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(1024, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(1024, (1, 1), padding="same", use_bias=False)(x)
@@ -213,45 +242,45 @@ def deeplabv3_plus(input_shape=(512, 512, 3), out_stride=16, num_classes=21):
     x = BatchNormalization()(x)
     x = Conv2D(1536, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(1536, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Conv2D(2048, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     # aspp
     x = aspp(x, input_shape, out_stride)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = Dropout(0.9)(x)
 
     ##decoder
     x = BilinearUpsampling((4, 4))(x)
     dec_skip = Conv2D(48, (1, 1), padding="same", use_bias=False)(skip)
     dec_skip = BatchNormalization()(dec_skip)
-    dec_skip = Activation("relu")(dec_skip)
+    dec_skip = LeakyReLU(alpha=rate_LRelu)(dec_skip)
     x = Concatenate()([x, dec_skip])
 
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     x = DepthwiseConv2D((3, 3), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
     x = Conv2D(256, (1, 1), padding="same", use_bias=False)(x)
     x = BatchNormalization()(x)
-    x = Activation("relu")(x)
+    x = LeakyReLU(alpha=rate_LRelu)(x)
 
     x = Conv2D(num_classes, (1, 1), padding="same")(x)
     x = BilinearUpsampling((4, 4))(x)
