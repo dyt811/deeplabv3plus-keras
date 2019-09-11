@@ -12,3 +12,7 @@ using modified Depthwise Separable Convolution instead.
 
 I already made leakRELU update because I believe that should in theory help gradient flow but I gotta put that input practise to be honest. 
  
+ 2019-09-10T215137EST
+ Had a really good discussion at the meetup meetings and these highlighted the further area actions that I need to explore more. 
+ 
+ 
