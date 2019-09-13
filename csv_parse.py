@@ -6,6 +6,7 @@ from PIL import ImageDraw, Image
 from PythonUtils.folder import create
 from PythonUtils.rle import RLE
 from collections import namedtuple
+from shutil import copyfile
 Pixel = namedtuple('Point', 'x y')
 
 def parse_CSV(
@@ -35,8 +36,11 @@ def parse_CSV(
     # Iterate through all files,
     for file in files:
 
+        original_file = train_image_folder.joinpath(Path(file))
+
         # Open each file,
-        image = Image.open(train_image_folder.joinpath(Path(file)))
+        image = Image.open(original_file)
+
         draw = ImageDraw.Draw(image)
 
         defect_found = False
@@ -60,7 +64,11 @@ def parse_CSV(
 
         # After all four iteration, save the file.
         if defect_found:
-            image.save(output_image_folder.joinpath(Path(file)))
+
+            destination_original = output_image_folder.joinpath(Path("Orig_"+file))
+            destination_annotation = output_image_folder.joinpath(Path("Anno_"+file))
+            copyfile(original_file, destination_original)
+            image.save(destination_annotation)
         image.close()
 
     # Read Column 4: Writeout the data into another format.
