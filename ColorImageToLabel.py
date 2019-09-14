@@ -22,7 +22,7 @@ from model.abstract import CNN_model
 from model.path import get_paths
 from model.stage import stage
 
-from generator.Weather_DataSequence6_SimplifiedInput import DataSequence, ProcessingMode
+from generator.RGBInputGrayGroundTruthLabelSequences import DataSequence, ProcessingMode
 
 # This is the generic class wrapper around the DeepLabV3 core class by incorporate Generator for image class data loading.
 class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
@@ -33,14 +33,15 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
     Output Type: Multiclass Label.
     """
 
-    def __init__(self, input_shape, output_classes, train_data_path: Path):
+    def __init__(self,
+                 input_shape, output_classes, train_data_path: Path):
 
         self.input_shape = input_shape
         self.output_classes = output_classes
 
         self.train_data = None
         self.train_data_path: Path = train_data_path
-        self.validation_data = None
+        self.test_data = None # fixme: independent data used for testing (optional?)
         self.callbacks_list = None
 
         self.model = None
@@ -87,9 +88,12 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         return self.model
 
     def IOCheck(self):
+        """
+        A quick but important sanity check step to ensure the input and output shapes conforms to the public's expectations.
+        :return:
+        """
         import numpy as np
-
-        dummy_input = np.ones((11, 256, 256)) #fixme this image size needs to be updated.
+        dummy_input = np.ones((self.input_shape))
         preds = self.model.predict(dummy_input)
         print(preds.shape)
 
@@ -139,7 +143,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         )
 
         self.train_data = train_data
-        self.validation_data = validation_data
+        self.test_data = validation_data
         self.stage = stage.DataLoaded
 
 
@@ -164,7 +168,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             self.train_data,
             steps_per_epoch=size_step,
             epochs=size_epoch,
-            validation_data=self.validation_data,
+            validation_data=self.test_data,
             validation_steps=size_step,
             callbacks=self.callbacks_list,
         )

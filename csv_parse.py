@@ -1,24 +1,37 @@
-# Here are some functions to help load the data set for the Severstal.
+# Here are some functions to help load the data set for the Seversteel Project
 from pathlib import Path
 import pandas as pd
 
 from PIL import ImageDraw, Image
 from PythonUtils.folder import create
 from PythonUtils.rle import RLE
+from PythonUtils.file import unique_name
 from collections import namedtuple
 from shutil import copyfile
 Pixel = namedtuple('Point', 'x y')
+from tqdm import tqdm
 
 def parse_CSV(
         path_csv:Path = "../../data_1/train.csv",
         train_image_folder: Path = Path("../../data_1/train_images/"),
-        output_image_folder: Path = Path("../../data_1/labelled_images/")):
+        output_image_folder: Path = Path("../../data_1/labelled_images/")
+    ):
     """
     A specialized function for Seversteel's CSV parsing.
     :param path_csv:
     :return:
     """
+    # Create Main label image output folder. 
     create(output_image_folder)
+    
+    # Generate path to the respective train and label folder.
+    output_train = output_image_folder.joinpath(Path("train"))
+    output_label = output_image_folder.joinpath(Path("label"))
+    
+    # Create these two folders. 
+    create(output_train)
+    create(output_label)
+
 
     # Read Column 1: Get images and class ID separated.
     df = pd.read_csv(path_csv)
@@ -34,12 +47,13 @@ def parse_CSV(
     files = set(df_final["Files"])
 
     # Iterate through all files,
-    for file in files:
+    for file in tqdm(files):
 
         original_file = train_image_folder.joinpath(Path(file))
 
         # Open each file,
-        image = Image.open(original_file)
+        #image = Image.open(original_file) 
+        image = Image.new('L', size=(1600,256))
 
         draw = ImageDraw.Draw(image)
 
@@ -58,15 +72,14 @@ def parse_CSV(
             rle_data = RLE(list_order, list_length)
 
             list_xy = rle_data.decode()
-            # Draw the coordinates provided. for
-            draw.point(list_xy, fill=(defect*40, defect*40, 0, 128))
+            # Draw the coordinates provided
+            draw.point(list_xy, fill=defect*30)
             defect_found = True
 
         # After all four iteration, save the file.
         if defect_found:
-
-            destination_original = output_image_folder.joinpath(Path("Orig_"+file))
-            destination_annotation = output_image_folder.joinpath(Path("Anno_"+file))
+            destination_original = output_train.joinpath(Path(file))
+            destination_annotation = output_label.joinpath(Path(file))
             copyfile(original_file, destination_original)
             image.save(destination_annotation)
         image.close()
