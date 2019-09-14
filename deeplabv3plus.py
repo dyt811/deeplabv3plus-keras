@@ -11,6 +11,7 @@ from keras.layers import (
     Concatenate,
     LeakyReLU,
 )
+import tensorflow as tf
 from keras.models import Model
 import keras.backend as K
 from keras.engine import Layer, InputSpec
@@ -38,7 +39,7 @@ class BilinearUpsampling(Layer):
         return (input_shape[0], height, width, input_shape[3])
 
     def call(self, inputs):
-        return K.tf.image.resize_bilinear(
+        return tf.image.resize_bilinear(
             inputs,
             (
                 int(inputs.shape[1] * self.upsampling[0]),
@@ -204,13 +205,14 @@ def aspp(x, input_shape, out_stride):
     print(f"ASPP b3 Shape {K.shape(b3)}")
 
     # B4 block: ???
-    out_shape = int(input_shape[0] / out_stride)
-    b4 = AveragePooling2D(pool_size=(out_shape, out_shape))(x)
+    out_shape1 = int(input_shape[0] / out_stride) # for x dimension
+    out_shape2 = int(input_shape[1] / out_stride) # for y dimension
+    b4 = AveragePooling2D(pool_size=(out_shape1, out_shape2))(x)
     b4 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b4)
     b4 = BatchNormalization()(b4)
     b4 = LeakyReLU(alpha=rate_LRelu)(b4)
     # Special B4 layers: upsampling TO the final outershape
-    b4 = BilinearUpsampling((out_shape, out_shape))(b4)
+    b4 = BilinearUpsampling((out_shape1, out_shape2))(b4)
 
     print(f"ASPP b4 Shape {K.shape(b4)}")
 

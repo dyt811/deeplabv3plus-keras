@@ -50,7 +50,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.size_step = 256
         self.size_epoch = 500
-        self.loss = "mse" # fixme: loss parameters need to be redefined
+        self.loss = "mae"  # fixme: loss parameters need to be redefined
         self.optimizer = "adam"
         self.metrics = ["mae", "mse", "mape", "cosine"]
         self.checkpoint_metric = "val_mean_absolute_error"
@@ -59,7 +59,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         # Dynamically generate model input_path.
         this_file = os.path.realpath(__file__)
-        project_root = get_abspath(this_file, 2) # todo: this folder path is hard coded. Needs to be generalized.
+        project_root = get_abspath(this_file, 2)  # todo: this folder path is hard coded. Needs to be generalized.
 
         # Log path.
         self.path_log, self.path_model = get_paths(project_root)
@@ -79,10 +79,10 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         :param output_classes:
         :return:
         """
-        if self.model_stage < stage.Created:
+        if self.model_stage.value < stage.Created.value:
 
             self.model = deeplabv3_plus(input_shape=self.input_shape, num_classes=self.output_classes)
-            self.stage = stage.Created
+            self.model_stage = stage.Created
         else:
             print("Stage: Model already created.")
         return self.model
@@ -93,8 +93,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         :return:
         """
         import numpy as np
-        dummy_input = np.ones((self.input_shape))
+        dummy_input = np.ones((100, self.input_shape[0], self.input_shape[1], self.input_shape[2]))
         preds = self.model.predict(dummy_input)
+
         print(preds.shape)
 
     def compile(self):
@@ -111,7 +112,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             loss=self.loss, optimizer=self.optimizer, metrics=self.metrics
         )
         self.model.summary()
-        self.stage = stage.Compiled
+        self.model_stage = stage.Compiled
 
         return self.model
 
@@ -144,7 +145,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.train_data = train_data
         self.test_data = validation_data
-        self.stage = stage.DataLoaded
+        self.model_stage = stage.DataLoaded
 
 
     def run(self, size_step=None, size_epoch=None):
