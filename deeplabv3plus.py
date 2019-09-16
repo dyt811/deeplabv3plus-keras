@@ -23,7 +23,12 @@ rate_LRelu = 0.01
 
 class BilinearUpsampling(Layer):
     def __init__(self, upsampling=(2, 2), data_format=None, **kwargs):
-
+        """
+        During its instantiation, it require two up sampling parameter.
+        :param upsampling:
+        :param data_format:
+        :param kwargs:
+        """
         super(BilinearUpsampling, self).__init__(**kwargs)
         self.data_format = normalize_data_format(data_format)
         self.upsampling = conv_utils.normalize_tuple(upsampling, 2, "size")

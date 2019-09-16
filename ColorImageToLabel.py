@@ -165,6 +165,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         if size_epoch is None:
             size_epoch = self.size_epoch
 
+        # Set the proper call back to write functions and record results for tensorboard.
+        self.set_callbacks()
+
         self.model.fit_generator(
             self.train_data,
             steps_per_epoch=size_step,
@@ -184,9 +187,11 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         :return:
         """
         # Model name.
-        name_model_checkpoint = os.path.join(self.path_model, f"{unique_name()}_{__name__}")
+        model_name= unique_name()
+        name_model_checkpoint = os.path.join(self.path_model, f"{model_name}_{__name__}.h5")
+        name_model_weight_checkpoint = os.path.join(self.path_model, f"{model_name}_WEIGHTS_{__name__}.h5")
 
-        # Checkpoint 1
+        # Checkpoint for saving the entire Keras Model.
         callback_save_model = ModelCheckpoint(
             name_model_checkpoint,
             monitor=self.checkpoint_metric,
@@ -195,7 +200,17 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             mode=self.checkpoint_metric_mode,
         )
 
-        # Checkpoint 2
+        # Checkpoint for saving the weight only without saving the full model.
+        callback_save_model_weights = ModelCheckpoint(
+            name_model_weight_checkpoint,
+            monitor=self.checkpoint_metric,
+            verbose=1,
+            save_best_only=True,
+            save_weights_only=True,
+            mode=self.checkpoint_metric_mode,
+        )
+
+        # Checkpoint 3
         # Generate the tensorboard
         callback_tensorboard = TensorBoard(
             log_dir=self.path_log_run,
@@ -203,4 +218,4 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             write_images=True
         )
 
-        self.callbacks_list = [callback_tensorboard, callback_save_model]
+        self.callbacks_list = [callback_tensorboard, callback_save_model, callback_save_model_weights]

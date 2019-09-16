@@ -9,15 +9,13 @@ from model.cleanup import cleanLog
 
 # By importing from different class as model, they can be invoked individually here.
 # Setup:
-batch_size = 32 # 32 images PER epoch
-input_shape = (1600, 256, 3)  # this is the input shape of the FINAL TRIMMed model.
-output_channel = (1600, 256, 1)
-num_classes = 4
-size_step = 128
-size_epoch = 500
-train_data_path = Path(r"C:\Git\MarkerTrainer\data_1\labelled_images")  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
-# Train images are RGB
-# Label images are Grayscale
+batch_size = 8 # images PER epoch
+input_shape = (240, 320, 3)  # Train images are RGB. first number is the number of rows (y positions), second number is the number of columns (x)
+output_channel = (240, 320, 1)  # Label images are Grayscale
+num_classes = 1
+size_step = 8
+size_epoch = 50
+train_data_path = Path(r"C:\Git\MarkerTrainer\data_validation")  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
 
 # Model creation:
 model1 = DeepLabV3PlusCNN_I2D_O2D(
