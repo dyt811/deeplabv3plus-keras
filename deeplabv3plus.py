@@ -210,8 +210,8 @@ def aspp(x, input_shape, out_stride):
     print(f"ASPP b3 Shape {K.shape(b3)}")
 
     # B4 block: ???
-    out_shape1 = int(input_shape[0] / out_stride) # for x dimension
-    out_shape2 = int(input_shape[1] / out_stride) # for y dimension
+    out_shape1 = int(input_shape[0] / out_stride)  # for x dimension
+    out_shape2 = int(input_shape[1] / out_stride)  # for y dimension
     b4 = AveragePooling2D(pool_size=(out_shape1, out_shape2))(x)
     b4 = Conv2D(256, (1, 1), padding="same", use_bias=False)(b4)
     b4 = BatchNormalization()(b4)
