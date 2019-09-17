@@ -50,10 +50,10 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.size_step = 256
         self.size_epoch = 500
-        self.loss = "mae"  # fixme: loss parameters need to be redefined
+        self.loss = "mse"  # fixme: loss parameters need to be redefined
         self.optimizer = "adam"
         self.metrics = ["mae", "mse", "mape", "cosine"]
-        self.checkpoint_metric = "val_mean_absolute_error"
+        self.checkpoint_metric = "val_mean_squared_error"
         self.checkpoint_metric_mode = "min"
 
 

@@ -84,7 +84,7 @@ def predict_folder(path_model_weights: str, input_folder: str):
 
 if __name__ == "__main__":
     predict_folder(
-        r"C:\Git\MarkerTrainer\models\2019-09-15T16_48_22.994492_WEIGHTS_model.Kaggle_DeepLabV3Plus.ColorImageToLabel",
+        r"C:\Git\MarkerTrainer\models\2019-09-17T00_19_26.348347_WEIGHTS_model.Kaggle_DeepLabV3Plus.ColorImageToLabel.h5",
         r"C:\Git\MarkerTrainer\data_test"
     )
 
