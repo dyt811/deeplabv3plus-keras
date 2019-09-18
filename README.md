@@ -1,6 +1,6 @@
 ## Deeplab v3+ in keras
 DeepLab is a state-of-art deep learning model for semantic image segmentation. For tensorflow implemention, please refer to [tensorflow/models/research]: https://github.com/tensorflow/models/tree/master/research/deeplab
-</br>
+* This is an adapted verion originally presented at https://github.com/mjDelta/deeplabv3plus-keras
 
 #### The Features of DeepLab v3+
 * Encoder-Decoder Structures
@@ -19,3 +19,5 @@ DeepLab is a state-of-art deep learning model for semantic image segmentation. F
 1. Upsampling
 2. Separable Convolutions
 >
+
+#### 

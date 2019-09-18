@@ -5,7 +5,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 from PythonUtils.file import unique_name
 from PythonUtils.folder import get_abspath, create
 
-from model.Kaggle_DeepLabV3Plus.deeplabv3plus import deeplabv3_plus
+from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from model.abstract import CNN_model
 from model.path import get_paths
 from model.stage import stage
@@ -21,15 +21,14 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
     Output Type: Multiclass Label.
     """
 
-    def __init__(self,
-                 input_shape, output_classes, train_data_path: Path):
+    def __init__(self, input_shape, output_classes, train_data_path: Path):
 
         self.input_shape = input_shape
         self.output_classes = output_classes
 
         self.train_data = None
         self.train_data_path: Path = train_data_path
-        self.test_data = None # fixme: independent data used for testing (optional?)
+        self.test_data = None  # fixme: independent data used for testing (optional?)
         self.callbacks_list = None
 
         self.model = None
@@ -44,10 +43,11 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.checkpoint_metric = "val_mean_squared_error"
         self.checkpoint_metric_mode = "min"
 
-
         # Dynamically generate model input_path.
         this_file = os.path.realpath(__file__)
-        project_root = get_abspath(this_file, 2)  # todo: this folder path is hard coded. Needs to be generalized.
+        project_root = get_abspath(
+            this_file, 2
+        )  # todo: this folder path is hard coded. Needs to be generalized.
 
         # Log path.
         self.path_log, self.path_model = get_paths(project_root)
@@ -69,7 +69,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         """
         if self.model_stage.value < stage.Created.value:
 
-            self.model = deeplabv3_plus(input_shape=self.input_shape, num_classes=self.output_classes)
+            self.model = deeplabv3_plus(
+                input_shape=self.input_shape, num_classes=self.output_classes
+            )
             self.model_stage = stage.Created
         else:
             print("Stage: Model already created.")
@@ -81,7 +83,10 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         :return:
         """
         import numpy as np
-        dummy_input = np.ones((100, self.input_shape[0], self.input_shape[1], self.input_shape[2]))
+
+        dummy_input = np.ones(
+            (100, self.input_shape[0], self.input_shape[1], self.input_shape[2])
+        )
         preds = self.model.predict(dummy_input)
 
         print(preds.shape)
@@ -134,7 +139,6 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.train_data = train_data
         self.test_data = validation_data
         self.model_stage = stage.DataLoaded
-
 
     def run(self, size_step=None, size_epoch=None):
         """
