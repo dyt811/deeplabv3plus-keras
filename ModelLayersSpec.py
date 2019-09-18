@@ -20,6 +20,10 @@ from keras.backend.common import normalize_data_format
 
 rate_LRelu = 0.01
 
+# Force Keras to use 16 bits to free up more memory at the expense of training time.
+dtype = "float16"
+K.set_floatx(dtype)
+
 
 class BilinearUpsampling(Layer):
     def __init__(self, upsampling=(2, 2), data_format=None, **kwargs):

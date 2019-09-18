@@ -8,13 +8,21 @@ from model.cleanup import cleanLog
 # By importing from different class as model, they can be invoked individually here.
 # Setup:
 batch_size = 16  # images PER epoch
+
 input_shape = (
-    240,
-    320,
-    3,
+    240,  # height first
+    320,  # width later.
+    3,  # color channel
 )  # Train images are RGB. first number is the number of rows (y positions), second number is the number of columns (x)
-output_channel = (240, 320, 1)  # Label images are Grayscale
+
+output_channel = (
+    240,  # height
+    320,  # width
+    1,  # color channel
+)  # Label images are Grayscale
+
 num_classes = 1
+
 size_step = 4
 size_epoch = 500
 train_data_path = Path(

@@ -6,7 +6,7 @@ import model
 from tqdm import tqdm
 from PythonUtils.folder import recursive_list
 from model.Kaggle_DeepLabV3Plus.deeplabv3plus import BilinearUpsampling
-from model.load import model as load_model
+from model.load import load_model as load_model
 import csv
 from pathlib import Path
 from PIL import Image
