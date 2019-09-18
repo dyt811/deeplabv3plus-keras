@@ -1,17 +1,5 @@
 import os
 from pathlib import Path
-from keras.models import Sequential
-from keras.layers import (
-    Dense,
-    Dropout,
-    BatchNormalization,
-    Conv2D,
-    MaxPooling2D,
-    Flatten,
-    Reshape,
-    UpSampling2D,
-)
-from keras.layers import LeakyReLU
 from keras.callbacks import TensorBoard, ModelCheckpoint
 
 from PythonUtils.file import unique_name
@@ -176,10 +164,18 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             validation_steps=size_step,
             callbacks=self.callbacks_list,
         )
-        self.path_prediction = os.path.join(self.path_model, unique_name() + ".h5")
-        self.model.save(self.path_prediction)
+
+        # Timestamp and save the final model as well as its weights
+        timestamp = unique_name()
+
+        name_final_model = os.path.join(self.path_model, f"{timestamp}_FinalModel_{__name__}.h5")
+        self.model.save(name_final_model)
+
+        name_final_model_weight = os.path.join(self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5")
+        self.model.save_weight(name_final_model_weight)
+
         self.stage = stage.Ran
-        return self.path_prediction
+        return name_final_model
 
     def set_callbacks(self):
         """
@@ -187,22 +183,24 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         :return:
         """
         # Model name.
-        model_name= unique_name()
-        name_model_checkpoint = os.path.join(self.path_model, f"{model_name}_{__name__}.h5")
-        name_model_weight_checkpoint = os.path.join(self.path_model, f"{model_name}_WEIGHTS_{__name__}.h5")
+        model_name = unique_name()
 
-        # Checkpoint for saving the entire Keras Model.
-        callback_save_model = ModelCheckpoint(
-            name_model_checkpoint,
+        checkpoint_last_best_model = os.path.join(self.path_model, f"{model_name}_LastBest_{__name__}.h5")
+        checkpoint_last_model_weight = os.path.join(self.path_model, f"{model_name}_Weights_{__name__}.h5")
+        checkpoint_last_best_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestWeights_{__name__}.h5")
+
+        # Checkpoint for saving the last best Keras Model.
+        callback_save_best_model = ModelCheckpoint(
+            checkpoint_last_best_model,
             monitor=self.checkpoint_metric,
             verbose=1,
             save_best_only=True,
             mode=self.checkpoint_metric_mode,
         )
 
-        # Checkpoint for saving the weight only without saving the full model.
-        callback_save_model_weights = ModelCheckpoint(
-            name_model_weight_checkpoint,
+        # Checkpoint for saving the last best weights only without saving the full model.
+        callback_save_best_model_weights = ModelCheckpoint(
+            checkpoint_last_best_model_weight,
             monitor=self.checkpoint_metric,
             verbose=1,
             save_best_only=True,
@@ -210,12 +208,23 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             mode=self.checkpoint_metric_mode,
         )
 
-        # Checkpoint 3
-        # Generate the tensorboard
+        # Checkpoint for saving the latest model weight.
+        callback_save_model_weights = ModelCheckpoint(
+            checkpoint_last_model_weight,
+            verbose=1,
+            save_weights_only=True,
+        )
+
+        # Checkpoint for updating the tensorboard
         callback_tensorboard = TensorBoard(
             log_dir=self.path_log_run,
             histogram_freq=0,
             write_images=True
         )
 
-        self.callbacks_list = [callback_tensorboard, callback_save_model, callback_save_model_weights]
+        self.callbacks_list = [
+            callback_tensorboard, # always update the tensorboard
+            callback_save_model_weights, # always save model weights.
+            callback_save_best_model,
+            callback_save_best_model_weights,
+        ]
