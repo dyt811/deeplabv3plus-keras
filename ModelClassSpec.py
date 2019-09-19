@@ -11,6 +11,12 @@ from model.path import get_paths
 from model.stage import stage
 
 from generator.RGBInputGrayGroundTruthLabelSequences import DataSequence, ProcessingMode
+from lossfn.ssim import calculate_SSIM_loss
+
+import keras.backend as K
+# Force Keras to use 16 bits to free up more memory at the expense of training time.
+dtype = "float16"
+#K.set_floatx(dtype)
 
 # This is the generic class wrapper around the DeepLabV3 core class by incorporate Generator for image class data loading.
 class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
@@ -37,7 +43,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.size_step = 256
         self.size_epoch = 500
-        self.loss = "mse"  # fixme: loss parameters need to be redefined
+        self.loss = calculate_SSIM_loss  # fixme: loss parameters need to be redefined
         self.optimizer = "adam"
         self.metrics = ["mae", "mse", "mape", "cosine"]
         self.checkpoint_metric = "val_mean_squared_error"
@@ -176,7 +182,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.model.save(name_final_model)
 
         name_final_model_weight = os.path.join(self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5")
-        self.model.save_weight(name_final_model_weight)
+        self.model.save_weights(name_final_model_weight)
 
         self.stage = stage.Ran
         return name_final_model
@@ -193,7 +199,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         checkpoint_last_model_weight = os.path.join(self.path_model, f"{model_name}_Weights_{__name__}.h5")
         checkpoint_last_best_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestWeights_{__name__}.h5")
 
-        # Checkpoint for saving the last best Keras Model.
+        # Checkpoint for saving the LAST BEST MODEL.
         callback_save_best_model = ModelCheckpoint(
             checkpoint_last_best_model,
             monitor=self.checkpoint_metric,
@@ -202,7 +208,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             mode=self.checkpoint_metric_mode,
         )
 
-        # Checkpoint for saving the last best weights only without saving the full model.
+        # Checkpoint for saving the LAST BEST MODEL WEIGHTS only without saving the full model.
         callback_save_best_model_weights = ModelCheckpoint(
             checkpoint_last_best_model_weight,
             monitor=self.checkpoint_metric,
@@ -212,7 +218,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             mode=self.checkpoint_metric_mode,
         )
 
-        # Checkpoint for saving the latest model weight.
+        # Checkpoint for saving the LATEST MODEL WEIGHT.
         callback_save_model_weights = ModelCheckpoint(
             checkpoint_last_model_weight,
             verbose=1,

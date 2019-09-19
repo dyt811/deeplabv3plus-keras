@@ -22,7 +22,7 @@ rate_LRelu = 0.01
 
 # Force Keras to use 16 bits to free up more memory at the expense of training time.
 dtype = "float16"
-K.set_floatx(dtype)
+#K.set_floatx(dtype)
 
 
 class BilinearUpsampling(Layer):

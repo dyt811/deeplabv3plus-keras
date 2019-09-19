@@ -1,17 +1,9 @@
-from keras.utils import CustomObjectScope
 from keras.preprocessing import image
 import os
 import numpy as np
-import model
-from tqdm import tqdm
 from PythonUtils.folder import recursive_list
-from model.Kaggle_DeepLabV3Plus.deeplabv3plus import BilinearUpsampling
-from model.load import load_model as load_model
-import csv
-from pathlib import Path
+from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from PIL import Image
-
-from model.Kaggle_DeepLabV3Plus.deeplabv3plus import deeplabv3_plus
 
 
 def predict_image(path_input_model_weight: str, input_image):
@@ -87,6 +79,6 @@ def predict_folder(path_model_weights: str, input_folder: str):
 
 if __name__ == "__main__":
     predict_folder(
-        r"C:\Git\MarkerTrainer\models\2019-09-17T00_53_45.722731_WEIGHTS_model.Kaggle_DeepLabV3Plus.ColorImageToLabel.h5",
-        r"C:\Git\MarkerTrainer\data_test"
+        r"C:\Git\MarkerTrainer\models\2019-09-18T01_36_40.116400_LastBestWeights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
+        r"C:\Git\MarkerTrainer\data_test_results_2019-09-19_LastBestWeight"
     )
