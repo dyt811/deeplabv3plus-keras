@@ -79,6 +79,6 @@ def predict_folder(path_model_weights: str, input_folder: str):
 
 if __name__ == "__main__":
     predict_folder(
-        r"C:\Git\MarkerTrainer\models\2019-09-18T01_36_40.116400_LastBestWeights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
-        r"C:\Git\MarkerTrainer\data_test_results_2019-09-19_LastBestWeight"
+        r"C:\Git\MarkerTrainer\models\2019-09-19T17_59_32.800837_FinalModelWeights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
+        r"C:\Git\MarkerTrainer\data_test_results_2019-09-20_FinalWeight"
     )

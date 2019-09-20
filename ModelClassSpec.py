@@ -11,7 +11,8 @@ from model.path import get_paths
 from model.stage import stage
 
 from generator.RGBInputGrayGroundTruthLabelSequences import DataSequence, ProcessingMode
-from lossfn.ssim import calculate_SSIM_loss
+from lossfn.ssim import calculate_SSIM_loss, calculate_mae_diff_SSIM_composite_loss
+from lossfn.f1 import f1_metric
 
 import keras.backend as K
 # Force Keras to use 16 bits to free up more memory at the expense of training time.
@@ -43,10 +44,10 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.size_step = 256
         self.size_epoch = 500
-        self.loss = calculate_SSIM_loss  # fixme: loss parameters need to be redefined
+        self.loss = f1_metric  # fixme: loss parameters need to be redefined
         self.optimizer = "adam"
-        self.metrics = ["mae", "mse", "mape", "cosine"]
-        self.checkpoint_metric = "val_mean_squared_error"
+        self.metrics = ["mae", "mse", "mape", "cosine", f1_metric]
+        self.checkpoint_metric = "val_f1_metric"
         self.checkpoint_metric_mode = "min"
 
         # Dynamically generate model input_path.
@@ -108,7 +109,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             return self.model
 
         self.model.compile(
-            loss=self.loss, optimizer=self.optimizer, metrics=self.metrics
+            loss=self.loss,
+            optimizer=self.optimizer,
+            metrics=self.metrics
         )
         self.model.summary()
         self.model_stage = stage.Compiled
@@ -233,8 +236,8 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         )
 
         self.callbacks_list = [
-            callback_tensorboard, # always update the tensorboard
-            callback_save_model_weights, # always save model weights.
+            callback_tensorboard,  # always update the tensorboard
+            callback_save_model_weights,  # always save model weights.
             callback_save_best_model,
             callback_save_best_model_weights,
         ]
