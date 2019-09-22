@@ -1,5 +1,7 @@
 from model.Kaggle_DeepLabV3Plus.ModelClassSpec import DeepLabV3PlusCNN_I2D_O2D
 from pathlib import Path
+from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
+from lossfn.f1 import f1_metric
 
 from model.cleanup import cleanLog
 
@@ -7,7 +9,7 @@ from model.cleanup import cleanLog
 
 # By importing from different class as model, they can be invoked individually here.
 # Setup:
-batch_size = 16  # images PER epoch
+batch_size = 8  # images PER epoch
 
 input_shape = (
     240,  # height first
@@ -23,18 +25,31 @@ output_channel = (
 
 num_classes = 1
 
-size_step = 4
+size_step = 8
 size_epoch = 500
 train_data_path = Path(
-    r"C:\Git\MarkerTrainer\data_validation\augmentation_2019-09-17T00_09_22.620680"
+    r"C:\Git\MarkerTrainer\data_trailmix\augmentation_2019-09-21T22_07_00.474870"
 )  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
 
 # Model creation:
-model1 = DeepLabV3PlusCNN_I2D_O2D(
-    input_shape=input_shape, output_classes=num_classes, train_data_path=train_data_path
+model_single_class = DeepLabV3PlusCNN_I2D_O2D(
+    input_shape=input_shape,
+    output_classes=num_classes,
+    train_data_path=train_data_path,
+    loss="binary_crossentropy",
+    metrics=["mae",
+             "mse",
+             "mape",
+             "cosine",
+             loss_SSIM,
+             loss_mae_diff_SSIM_composite,
+             loss_mse_diff_SSIM_composite,
+             f1_metric],
+    checkpoint_metric="binary_crossentropy",
 )
-model1.create()
-model1.compile()
-model1.IOCheck()
-model1.load_data(batch_size=batch_size)
-model1.run(size_step, size_epoch)
+model_single_class.create()
+model_single_class.compile()
+model_single_class.IOCheck()
+model_single_class.load_data(batch_size=batch_size)
+final_model1, final_model1_weights = model_single_class.run(size_step, size_epoch)
+model_single_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-21_FinalWeights_SingleClass")

@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 from keras.callbacks import TensorBoard, ModelCheckpoint
 
-from PythonUtils.file import unique_name
-from PythonUtils.folder import get_abspath, create
+from PythonUtils.PUFile import unique_name
+from PythonUtils.PUFolder import get_abspath, create
 
 from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from model.abstract import CNN_model
@@ -11,8 +11,9 @@ from model.path import get_paths
 from model.stage import stage
 
 from generator.RGBInputGrayGroundTruthLabelSequences import DataSequence, ProcessingMode
-from lossfn.ssim import calculate_SSIM_loss, calculate_mae_diff_SSIM_composite_loss
+from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
 from lossfn.f1 import f1_metric
+from model.Kaggle_DeepLabV3Plus.predict_mask import predict_folder
 
 import keras.backend as K
 # Force Keras to use 16 bits to free up more memory at the expense of training time.
@@ -28,10 +29,24 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
     Output Type: Multiclass Label.
     """
 
-    def __init__(self, input_shape, output_classes, train_data_path: Path):
-
+    def __init__(self,
+                 input_shape,
+                 output_classes,
+                 train_data_path: Path,
+                 optimizer="adam",
+                 loss=loss_mae_diff_SSIM_composite,
+                 metrics=["mae", "mse", "mape", "cosine", loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite],
+                 checkpoint_metric="val_loss_mse_diff_SSIM_composite",
+                 checkpoint_metric_mode="min",
+                 ):
+        # Use these settings per constructor input.
         self.input_shape = input_shape
         self.output_classes = output_classes
+        self.loss = loss
+        self.optimizer = optimizer
+        self.metrics = metrics
+        self.checkpoint_metric = checkpoint_metric
+        self.checkpoint_metric_mode = checkpoint_metric_mode
 
         self.train_data = None
         self.train_data_path: Path = train_data_path
@@ -39,16 +54,11 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.callbacks_list = None
 
         self.model = None
-
         self.path_prediction = None
 
+        # Default step and epoch size.   Easily overwritten during the run stage.
         self.size_step = 256
         self.size_epoch = 500
-        self.loss = f1_metric  # fixme: loss parameters need to be redefined
-        self.optimizer = "adam"
-        self.metrics = ["mae", "mse", "mape", "cosine", f1_metric]
-        self.checkpoint_metric = "val_f1_metric"
-        self.checkpoint_metric_mode = "min"
 
         # Dynamically generate model input_path.
         this_file = os.path.realpath(__file__)
@@ -166,6 +176,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         if size_epoch is None:
             size_epoch = self.size_epoch
 
+        # Write out the import paramemters used for the model BEFORE actual doing the training
+        self.record_settings()
+
         # Set the proper call back to write functions and record results for tensorboard.
         self.set_callbacks()
 
@@ -184,11 +197,46 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         name_final_model = os.path.join(self.path_model, f"{timestamp}_FinalModel_{__name__}.h5")
         self.model.save(name_final_model)
 
-        name_final_model_weight = os.path.join(self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5")
-        self.model.save_weights(name_final_model_weight)
+        name_final_model_weights = os.path.join(self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5")
+        self.model.save_weights(name_final_model_weights)
 
         self.stage = stage.Ran
-        return name_final_model
+        return name_final_model, name_final_model_weights
+
+    def record_settings(self):
+        """
+        An important documentation functions that keeps track of the key parameters in a json files for later review.
+        :return:
+        """
+        import json
+        dict_setting = {}
+        dict_setting["input_shape"] = self.input_shape
+        dict_setting["output_classes"] = self.output_classes
+        dict_setting["loss"] = self.loss
+        dict_setting["optimizer"] = self.optimizer
+        dict_setting["metrics"] = self.metrics
+        dict_setting["checkpoint_metric"] = self.checkpoint_metric
+        dict_setting["checkpoint_metric_mode"] = self.checkpoint_metric_mode
+        dict_setting["train_data_path"] = self.train_data_path
+        dict_setting["path_prediction"] = self.path_prediction
+
+        # Default step and epoch size.   Easily overwritten during the run stage.
+        dict_setting["size_step"] = self.size_step
+        dict_setting["size_epoch"] = self.size_epoch
+
+        # The path where json is saved is in the model folder
+        path_json = Path(self.path_model) / f"{unique_name()}_ModelParametersSpecification_{__name__}.json"
+        with open(path_json, 'w') as outfile:
+            json.dump(dict_setting, outfile)
+
+    def predict(self, path_model_weights, path_test):
+        """
+        Call the prediction function to predict the final model using weights. 
+        :param path_test:
+        :return:
+        """
+        predict_folder(path_model_weights, path_test)
+
 
     def set_callbacks(self):
         """

@@ -28,3 +28,4 @@ model1.compile()
 model1.IOCheck()
 model1.load_data(batch_size=batch_size)
 model1.run(size_step, size_epoch)
+

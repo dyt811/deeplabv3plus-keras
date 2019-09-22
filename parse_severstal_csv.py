@@ -3,9 +3,9 @@ from pathlib import Path
 import pandas as pd
 
 from PIL import ImageDraw, Image
-from PythonUtils.folder import create
+from PythonUtils.PUFolder import create
 from PythonUtils.rle import RLE
-from PythonUtils.file import unique_name
+from PythonUtils.PUFile import unique_name
 from collections import namedtuple
 from shutil import copyfile
 

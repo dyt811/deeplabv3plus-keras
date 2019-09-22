@@ -23,4 +23,10 @@ Training images, there are about 10K images. Pretty good fun time. Going to try 
  2019-09-10T215137EST
  Had a really good discussion at the meetup meetings and these highlighted the further area actions that I need to explore more. 
  
+ 2019-09-20T013853EST
+ Apparently, DeepLabV3+ have undifferentiable layers and hence results in F1 score type score cannot be calculated for some reason. Super weird. 
  
+ MAE and SSIM straight all does not produce enough class balance and lead to strictly BLACK images due to class imbalance. Something needs to change. 
+
+2019-09-21T213258EST
+Substantially improved the logging and workflow routines include model parameters documentation generation at run time.  

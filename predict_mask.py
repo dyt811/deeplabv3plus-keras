@@ -1,10 +1,13 @@
 from keras.preprocessing import image
 import os
 import numpy as np
-from PythonUtils.folder import recursive_list
+from PythonUtils.PUFolder import recursive_list
 from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from PIL import Image
-
+import json
+from PythonUtils.PUFile import unique_name
+from tqdm import tqdm
+from pathlib import Path
 
 def predict_image(path_input_model_weight: str, input_image):
     """
@@ -56,7 +59,9 @@ def predict_folder(path_model_weights: str, input_folder: str):
     input_model = deeplabv3_plus(input_shape=(240, 320, 3), num_classes=1)
     input_model.load_weights(path_model_weights)
 
-    for file in recursive_list(input_folder):
+    list_files = recursive_list(input_folder)
+
+    for file in tqdm(list_files):
         # predicting multiple images at once
         img = image.load_img(file)
 
@@ -74,11 +79,27 @@ def predict_folder(path_model_weights: str, input_folder: str):
         # Path(input_image).Parent.join("Output_" + Path(input_image).name)
         img.save(file + "_Output.jpg")
 
-    print("COMPLETED")
+    write_JSON_records(path_model_weights, list_files, input_folder)
+
+    print("Test folder prediction completed. ")
+
+def write_JSON_records(path_model, list_images, destination):
+    """
+    Keep a simple JSON record of where the model came from
+    :param path_model:
+    :return:
+    """
+    data = {}
+    data['model'] = path_model
+    data['images'] = list_images
+    path_json = Path(destination) / (unique_name() + "_prediction_details.json")
+    with open(path_json, 'w') as outfile:
+        json.dump(data, outfile)
+    print("JSON record written for the prediction process.")
 
 
 if __name__ == "__main__":
     predict_folder(
-        r"C:\Git\MarkerTrainer\models\2019-09-19T17_59_32.800837_FinalModelWeights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
-        r"C:\Git\MarkerTrainer\data_test_results_2019-09-20_FinalWeight"
+        r"C:\Git\MarkerTrainer\models\2019-09-21T22_12_07.660353_Weights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
+        r"C:\Git\MarkerTrainer\data_test_results_2019-09-21T213456EST"
     )
