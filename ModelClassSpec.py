@@ -4,7 +4,7 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 
 from PythonUtils.PUFile import unique_name
 from PythonUtils.PUFolder import get_abspath, create
-
+from PythonUtils.PUJson import write_json
 from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from model.abstract import CNN_model
 from model.path import get_paths
@@ -49,7 +49,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.checkpoint_metric_mode = checkpoint_metric_mode
 
         self.train_data = None
-        self.train_data_path: Path = train_data_path
+        self.path_train_data: Path = train_data_path
         self.test_data = None  # fixme: independent data used for testing (optional?)
         self.callbacks_list = None
 
@@ -133,7 +133,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         Load the data specification from the path in the .env.
         """
         if data_path == "":
-            data_path = self.train_data_path
+            data_path = self.path_train_data
 
         if self.model_stage != stage.Compiled:
             print("Stage: model has not been compiled yet.")
@@ -208,17 +208,17 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         An important documentation functions that keeps track of the key parameters in a json files for later review.
         :return:
         """
-        import json
+
         dict_setting = {}
         dict_setting["input_shape"] = self.input_shape
         dict_setting["output_classes"] = self.output_classes
-        dict_setting["loss"] = self.loss
-        dict_setting["optimizer"] = self.optimizer
-        dict_setting["metrics"] = self.metrics
-        dict_setting["checkpoint_metric"] = self.checkpoint_metric
+        dict_setting["loss"] = str(self.loss)
+        dict_setting["optimizer"] = str(self.optimizer)
+        dict_setting["metrics"] = str(self.metrics)
+        dict_setting["checkpoint_metric"] = str(self.checkpoint_metric)
         dict_setting["checkpoint_metric_mode"] = self.checkpoint_metric_mode
-        dict_setting["train_data_path"] = self.train_data_path
-        dict_setting["path_prediction"] = self.path_prediction
+        dict_setting["path_train_data"] = str(self.path_train_data)
+        dict_setting["path_prediction"] = str(self.path_prediction)
 
         # Default step and epoch size.   Easily overwritten during the run stage.
         dict_setting["size_step"] = self.size_step
@@ -226,8 +226,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         # The path where json is saved is in the model folder
         path_json = Path(self.path_model) / f"{unique_name()}_ModelParametersSpecification_{__name__}.json"
-        with open(path_json, 'w') as outfile:
-            json.dump(dict_setting, outfile)
+        write_json(path_json, dict_setting)
 
     def predict(self, path_model_weights, path_test):
         """

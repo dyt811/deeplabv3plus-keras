@@ -1,13 +1,17 @@
 from keras.preprocessing import image
 import os
 import numpy as np
+
+
 from PythonUtils.PUFolder import recursive_list
+from PythonUtils.PUFile import unique_name
+from PythonUtils.PUJson import write_json
 from model.Kaggle_DeepLabV3Plus.ModelLayersSpec import deeplabv3_plus
 from PIL import Image
-import json
-from PythonUtils.PUFile import unique_name
+
 from tqdm import tqdm
 from pathlib import Path
+
 
 def predict_image(path_input_model_weight: str, input_image):
     """
@@ -62,6 +66,11 @@ def predict_folder(path_model_weights: str, input_folder: str):
     list_files = recursive_list(input_folder)
 
     for file in tqdm(list_files):
+
+        # skip if it is not amn image.
+        if "JPEG" not in file.upper() and "PNG" not in file.upper() and "JPEG" not in file.upper():
+            continue
+
         # predicting multiple images at once
         img = image.load_img(file)
 
@@ -93,8 +102,7 @@ def write_JSON_records(path_model, list_images, destination):
     data['model'] = path_model
     data['images'] = list_images
     path_json = Path(destination) / (unique_name() + "_prediction_details.json")
-    with open(path_json, 'w') as outfile:
-        json.dump(data, outfile)
+    write_json(path_json, data)
     print("JSON record written for the prediction process.")
 
 
