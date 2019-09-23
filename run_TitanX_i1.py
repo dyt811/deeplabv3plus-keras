@@ -3,9 +3,10 @@ from pathlib import Path
 from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
 from lossfn.f1 import f1_metric
 
-from model.cleanup import cleanLog
+"""
+# This is the main class to run single class training. Labelled data ideally should be in binary label format. 0 & 1 but apparently, MSE is not picky and can take gray scale as well. 
+"""
 
-# This is the main script entry point to invoke the CNN.
 
 # By importing from different class as model, they can be invoked individually here.
 # Setup:
@@ -52,4 +53,6 @@ model_single_class.compile()
 model_single_class.IOCheck()
 model_single_class.load_data(batch_size=batch_size)
 final_model1, final_model1_weights = model_single_class.run(size_step, size_epoch)
-model_single_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")
+
+# Update this folder path to the folder contain HOLDOUT images.
+#model_single_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")
