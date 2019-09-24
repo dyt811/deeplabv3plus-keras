@@ -27,7 +27,7 @@ output_channel = (
 num_classes = 1
 
 size_step = 8
-size_epoch = 2000
+size_epoch = 750
 train_data_path = Path(
     r"C:\Git\MarkerTrainer\data_trailmix\augmentation_2019-09-21T22_07_00.474870"
 )  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
@@ -55,4 +55,4 @@ model_single_class.load_data(batch_size=batch_size)
 final_model1, final_model1_weights = model_single_class.run(size_step, size_epoch)
 
 # Update this folder path to the folder contain HOLDOUT images.
-#model_single_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")
+model_single_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_trailmix_2019-09-24_HoldOutTest")

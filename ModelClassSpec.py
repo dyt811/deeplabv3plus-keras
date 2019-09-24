@@ -226,7 +226,11 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         # The path where json is saved is in the model folder
         path_json = Path(self.path_model) / f"{unique_name()}_ModelParametersSpecification_{__name__}.json"
+        path_json_keras = Path(self.path_model) / f"{unique_name()}_ModelKerasSpecification_{__name__}.json"
         write_json(path_json, dict_setting)
+        write_json(path_json_keras, self.model.to_json())
+
+
 
     def predict(self, path_model_weights, path_test):
         """
@@ -247,10 +251,11 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         checkpoint_last_best_model = os.path.join(self.path_model, f"{model_name}_LastBest_{__name__}.h5")
         checkpoint_last_model_weight = os.path.join(self.path_model, f"{model_name}_Weights_{__name__}.h5")
-        checkpoint_last_best_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestWeights_{__name__}.h5")
+        checkpoint_best_loss_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestLossWeights_{__name__}.h5")
+        checkpoint_best_f1_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestF1Weights_{__name__}.h5")
 
         # Checkpoint for saving the LAST BEST MODEL.
-        callback_save_best_model = ModelCheckpoint(
+        callback_save_best_loss_model = ModelCheckpoint(
             checkpoint_last_best_model,
             monitor=self.checkpoint_metric,
             verbose=1,
@@ -259,13 +264,23 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         )
 
         # Checkpoint for saving the LAST BEST MODEL WEIGHTS only without saving the full model.
-        callback_save_best_model_weights = ModelCheckpoint(
-            checkpoint_last_best_model_weight,
+        callback_save_best_loss_model_weights = ModelCheckpoint(
+            checkpoint_best_loss_model_weight,
             monitor=self.checkpoint_metric,
             verbose=1,
             save_best_only=True,
             save_weights_only=True,
             mode=self.checkpoint_metric_mode,
+        )
+
+        # Checkpoint for saving the LAST BEST MODEL WEIGHTS only without saving the full model.
+        callback_save_best_f1_model_weights = ModelCheckpoint(
+            checkpoint_best_f1_model_weight,
+            monitor="val_f1_metric",
+            verbose=1,
+            save_best_only=True,
+            save_weights_only=True,
+            mode="max",
         )
 
         # Checkpoint for saving the LATEST MODEL WEIGHT.
@@ -284,7 +299,8 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         self.callbacks_list = [
             callback_tensorboard,  # always update the tensorboard
-            callback_save_model_weights,  # always save model weights.
-            callback_save_best_model,
-            callback_save_best_model_weights,
+            callback_save_model_weights,  # always save the latest model weights.
+            callback_save_best_loss_model, # always save best loss model
+            callback_save_best_loss_model_weights,
+            callback_save_best_f1_model_weights
         ]
