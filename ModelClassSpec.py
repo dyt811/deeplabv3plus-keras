@@ -10,7 +10,7 @@ from model.abstract import CNN_model
 from model.path import get_paths
 from model.stage import stage
 
-from generator.RGBInputGrayGroundTruthLabelSequences import DataSequence, ProcessingMode
+from generator.RGBInputGray2DGroundTruthLabelSequences import DataSequence, ProcessingMode
 from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
 from lossfn.f1 import f1_metric
 from model.Kaggle_DeepLabV3Plus.predict_mask import predict_folder
@@ -300,7 +300,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.callbacks_list = [
             callback_tensorboard,  # always update the tensorboard
             callback_save_model_weights,  # always save the latest model weights.
-            callback_save_best_loss_model, # always save best loss model
+            callback_save_best_loss_model,  # always save best loss model
             callback_save_best_loss_model_weights,
             callback_save_best_f1_model_weights
         ]

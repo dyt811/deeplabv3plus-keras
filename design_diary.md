@@ -30,3 +30,7 @@ Training images, there are about 10K images. Pretty good fun time. Going to try 
 
 2019-09-21T213258EST
 Substantially improved the logging and workflow routines include model parameters documentation generation at run time.  
+
+2019-09-24T201057EST
+Time to repurpose this for Severstal competition. 
+I have updated the CSV parser to export everything into 3D binary mask NPY files instead of 2D gray scale images. We will see how this looks. I am still not 100% convinced it converted properly but whatever. First step to go.   
