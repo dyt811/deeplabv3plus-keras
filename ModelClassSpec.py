@@ -16,9 +16,10 @@ from lossfn.f1 import f1_metric
 from model.Kaggle_DeepLabV3Plus.predict_mask import predict_folder
 
 import keras.backend as K
+
 # Force Keras to use 16 bits to free up more memory at the expense of training time.
 dtype = "float16"
-#K.set_floatx(dtype)
+# K.set_floatx(dtype)
 
 # This is the generic class wrapper around the DeepLabV3 core class by incorporate Generator for image class data loading.
 class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
@@ -29,16 +30,25 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
     Output Type: Multiclass Label.
     """
 
-    def __init__(self,
-                 input_shape,
-                 output_classes,
-                 train_data_path: Path,
-                 optimizer="adam",
-                 loss=loss_mae_diff_SSIM_composite,
-                 metrics=["mae", "mse", "mape", "cosine", loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite],
-                 checkpoint_metric="val_loss_mse_diff_SSIM_composite",
-                 checkpoint_metric_mode="min",
-                 ):
+    def __init__(
+        self,
+        input_shape,
+        output_classes,
+        train_data_path: Path,
+        optimizer="adam",
+        loss=loss_mae_diff_SSIM_composite,
+        metrics=[
+            "mae",
+            "mse",
+            "mape",
+            "cosine",
+            loss_SSIM,
+            loss_mae_diff_SSIM_composite,
+            loss_mse_diff_SSIM_composite,
+        ],
+        checkpoint_metric="val_loss_mse_diff_SSIM_composite",
+        checkpoint_metric_mode="min",
+    ):
         # Use these settings per constructor input.
         self.input_shape = input_shape
         self.output_classes = output_classes
@@ -119,9 +129,7 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             return self.model
 
         self.model.compile(
-            loss=self.loss,
-            optimizer=self.optimizer,
-            metrics=self.metrics
+            loss=self.loss, optimizer=self.optimizer, metrics=self.metrics
         )
         self.model.summary()
         self.model_stage = stage.Compiled
@@ -194,10 +202,14 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         # Timestamp and save the final model as well as its weights
         timestamp = unique_name()
 
-        name_final_model = os.path.join(self.path_model, f"{timestamp}_FinalModel_{__name__}.h5")
+        name_final_model = os.path.join(
+            self.path_model, f"{timestamp}_FinalModel_{__name__}.h5"
+        )
         self.model.save(name_final_model)
 
-        name_final_model_weights = os.path.join(self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5")
+        name_final_model_weights = os.path.join(
+            self.path_model, f"{timestamp}_FinalModelWeights_{__name__}.h5"
+        )
         self.model.save_weights(name_final_model_weights)
 
         self.stage = stage.Ran
@@ -225,12 +237,16 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         dict_setting["size_epoch"] = self.size_epoch
 
         # The path where json is saved is in the model folder
-        path_json = Path(self.path_model) / f"{unique_name()}_ModelParametersSpecification_{__name__}.json"
-        path_json_keras = Path(self.path_model) / f"{unique_name()}_ModelKerasSpecification_{__name__}.json"
+        path_json = (
+            Path(self.path_model)
+            / f"{unique_name()}_ModelParametersSpecification_{__name__}.json"
+        )
+        path_json_keras = (
+            Path(self.path_model)
+            / f"{unique_name()}_ModelKerasSpecification_{__name__}.json"
+        )
         write_json(path_json, dict_setting)
         write_json(path_json_keras, self.model.to_json())
-
-
 
     def predict(self, path_model_weights, path_test):
         """
@@ -240,7 +256,6 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         """
         predict_folder(path_model_weights, path_test)
 
-
     def set_callbacks(self):
         """
         Two important callbacks: 1) model check points 2) tensorboard update.
@@ -249,10 +264,18 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         # Model name.
         model_name = unique_name()
 
-        checkpoint_last_best_model = os.path.join(self.path_model, f"{model_name}_LastBest_{__name__}.h5")
-        checkpoint_last_model_weight = os.path.join(self.path_model, f"{model_name}_Weights_{__name__}.h5")
-        checkpoint_best_loss_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestLossWeights_{__name__}.h5")
-        checkpoint_best_f1_model_weight = os.path.join(self.path_model, f"{model_name}_LastBestF1Weights_{__name__}.h5")
+        checkpoint_last_best_model = os.path.join(
+            self.path_model, f"{model_name}_LastBest_{__name__}.h5"
+        )
+        checkpoint_last_model_weight = os.path.join(
+            self.path_model, f"{model_name}_Weights_{__name__}.h5"
+        )
+        checkpoint_best_loss_model_weight = os.path.join(
+            self.path_model, f"{model_name}_LastBestLossWeights_{__name__}.h5"
+        )
+        checkpoint_best_f1_model_weight = os.path.join(
+            self.path_model, f"{model_name}_LastBestF1Weights_{__name__}.h5"
+        )
 
         # Checkpoint for saving the LAST BEST MODEL.
         callback_save_best_loss_model = ModelCheckpoint(
@@ -285,16 +308,12 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         # Checkpoint for saving the LATEST MODEL WEIGHT.
         callback_save_model_weights = ModelCheckpoint(
-            checkpoint_last_model_weight,
-            verbose=1,
-            save_weights_only=True,
+            checkpoint_last_model_weight, verbose=1, save_weights_only=True
         )
 
         # Checkpoint for updating the tensorboard
         callback_tensorboard = TensorBoard(
-            log_dir=self.path_log_run,
-            histogram_freq=0,
-            write_images=True
+            log_dir=self.path_log_run, histogram_freq=0, write_images=True
         )
 
         self.callbacks_list = [
@@ -302,5 +321,5 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
             callback_save_model_weights,  # always save the latest model weights.
             callback_save_best_loss_model,  # always save best loss model
             callback_save_best_loss_model_weights,
-            callback_save_best_f1_model_weights
+            callback_save_best_f1_model_weights,
         ]

@@ -68,7 +68,11 @@ def predict_folder(path_model_weights: str, input_folder: str):
     for file in tqdm(list_files):
 
         # skip if it is not amn image.
-        if "JPEG" not in file.upper() and "PNG" not in file.upper() and "JPEG" not in file.upper():
+        if (
+            "JPEG" not in file.upper()
+            and "PNG" not in file.upper()
+            and "JPEG" not in file.upper()
+        ):
             continue
 
         # predicting multiple images at once
@@ -92,6 +96,7 @@ def predict_folder(path_model_weights: str, input_folder: str):
 
     print("Test folder prediction completed. ")
 
+
 def write_JSON_records(path_model, list_images, destination):
     """
     Keep a simple JSON record of where the model came from
@@ -99,8 +104,8 @@ def write_JSON_records(path_model, list_images, destination):
     :return:
     """
     data = {}
-    data['model'] = path_model
-    data['images'] = list_images
+    data["model"] = path_model
+    data["images"] = list_images
     path_json = Path(destination) / (unique_name() + "_prediction_details.json")
     write_json(path_json, data)
     print("JSON record written for the prediction process.")
@@ -109,5 +114,5 @@ def write_JSON_records(path_model, list_images, destination):
 if __name__ == "__main__":
     predict_folder(
         r"C:\Git\MarkerTrainer\models\2019-09-21T22_12_07.660353_Weights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
-        r"C:\Git\MarkerTrainer\data_test_results_2019-09-21T213456EST"
+        r"C:\Git\MarkerTrainer\data_test_results_2019-09-21T213456EST",
     )

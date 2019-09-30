@@ -32,7 +32,8 @@ def predict_folder_batch(path_models: List[str], path_input: str, path_output: P
 
     print("Batch modelS predictions completed!")
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     models = recursive_list(r"C:\BatchModelTesting\models")
     path_output = Path(r"C:\BatchModelTesting")
     predict_folder_batch(models, r"C:\BatchModelTesting\test_sets", path_output)
