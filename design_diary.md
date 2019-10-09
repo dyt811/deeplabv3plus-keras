@@ -35,6 +35,17 @@ Substantially improved the logging and workflow routines include model parameter
 Time to repurpose this for Severstal competition. 
 I have updated the CSV parser to export everything into 3D binary mask NPY files instead of 2D gray scale images. We will see how this looks. I am still not 100% convinced it converted properly but whatever. First step to go.   
 
-
 2019-09-30T203015EST
 Rewrite the part to parse ground truth into 4 channel binary masks are now in the process of saving them. Also wrote a function to actually parse the numpy array into the gray scale images. 
+
+2019-10-07T185538EST
+After reviewing last year's prediction, I see that that the results are not super optimal. Prediction outcome were actually around 0.4 in F1 score. 
+
+Now that we have a network more or less working, we need to build the reverise IO to actually get the submission part working so we can get some score on the private
+Kaggle competition board. 
+
+Two major goals of today: reverse IO, and maybe add a secondary balance weighted binary cross entropy function for better loss alternative than MSE.
+
+
+
+Another thing I want to clarify is the reuse of the data and whether the shuffling is working. 

@@ -8,7 +8,7 @@ from lossfn.f1 import f1_metric
 """
 # By importing from different class as model, they can be invoked individually here.
 # Setup:
-batch_size = 2 # images PER epoch
+batch_size = 2  # images PER epoch
 
 input_shape = (
     256,  # height first
@@ -22,9 +22,10 @@ output_channel = (
     4,  # color channel
 )  # Label images are Grayscale
 
-num_classes = 4 # keep this at one, because the ground truth label is not using one hot encoding. Prepare the data accordingly and using gray scale to encode class instead. Pretty much nothing else here needs to be modified.
-size_step = 2
-size_epoch = 5000
+num_classes = 4
+size_step = 4
+size_epoch = 7500
+size_epoch = 7500
 
 train_data_path = Path(r"C:\Git\MarkerTrainer\data_servestal\labelled_images")  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
 
@@ -49,8 +50,7 @@ model_multi_class.create()
 model_multi_class.compile()
 model_multi_class.IOCheck()
 model_multi_class.load_data(batch_size=batch_size)
-model_multi_class.run(size_step, size_epoch)
-final_model1, final_model1_weights = model_single_class.run(size_step, size_epoch)
+final_model1, final_model1_weights = model_multi_class.run(size_step, size_epoch)
 
 # Update this folder path to the folder contain HOLDOUT images.
 #model_multi_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")

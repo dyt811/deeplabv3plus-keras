@@ -36,17 +36,9 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         output_classes,
         train_data_path: Path,
         optimizer="adam",
-        loss=loss_mae_diff_SSIM_composite,
-        metrics=[
-            "mae",
-            "mse",
-            "mape",
-            "cosine",
-            loss_SSIM,
-            loss_mae_diff_SSIM_composite,
-            loss_mse_diff_SSIM_composite,
-        ],
-        checkpoint_metric="val_loss_mse_diff_SSIM_composite",
+        loss="mse",
+        metrics=None,
+        checkpoint_metric="val_loss",
         checkpoint_metric_mode="min",
     ):
         # Use these settings per constructor input.
@@ -54,7 +46,22 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
         self.output_classes = output_classes
         self.loss = loss
         self.optimizer = optimizer
-        self.metrics = metrics
+
+        # Default metrics
+        if metrics is None:
+            self.metrics = [
+                "mae",
+                "mse",
+                "mape",
+                "cosine",
+                loss_SSIM,
+                loss_mae_diff_SSIM_composite,
+                loss_mse_diff_SSIM_composite,
+                f1_metric,
+            ],
+        else:
+            self.metrics = metrics
+
         self.checkpoint_metric = checkpoint_metric
         self.checkpoint_metric_mode = checkpoint_metric_mode
 
