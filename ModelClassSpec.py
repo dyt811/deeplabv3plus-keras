@@ -10,8 +10,15 @@ from model.abstract import CNN_model
 from model.path import get_paths
 from model.stage import stage
 
-from generator.RGBInputGray2DGroundTruthLabelSequences import DataSequence, ProcessingMode
-from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
+from generator.RGBInputGray2DGroundTruthLabelSequences import (
+    DataSequence,
+    ProcessingMode,
+)
+from lossfn.ssim import (
+    loss_SSIM,
+    loss_mae_diff_SSIM_composite,
+    loss_mse_diff_SSIM_composite,
+)
 from lossfn.f1 import f1_metric
 from model.Kaggle_DeepLabV3Plus.predict_mask import predict_folder
 

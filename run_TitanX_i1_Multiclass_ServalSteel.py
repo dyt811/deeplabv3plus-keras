@@ -1,6 +1,10 @@
 from model.Kaggle_DeepLabV3Plus.ModelClassSpec import DeepLabV3PlusCNN_I2D_O2D
 from pathlib import Path
-from lossfn.ssim import loss_SSIM, loss_mae_diff_SSIM_composite, loss_mse_diff_SSIM_composite
+from lossfn.ssim import (
+    loss_SSIM,
+    loss_mae_diff_SSIM_composite,
+    loss_mse_diff_SSIM_composite,
+)
 from lossfn.f1 import f1_metric
 
 """
@@ -23,9 +27,8 @@ output_channel = (
 )  # Label images are Grayscale
 
 num_classes = 4
-size_step = 4
 size_epoch = 7500
-size_epoch = 7500
+size_step = 2
 
 train_data_path = Path(r"C:\Git\MarkerTrainer\data_servestal\labelled_images")  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
 
@@ -35,14 +38,16 @@ model_multi_class = DeepLabV3PlusCNN_I2D_O2D(
     output_classes=num_classes,
     train_data_path=train_data_path,
     loss="mse",
-    metrics=["mae",
-             "mse",
-             "mape",
-             "cosine",
-             loss_SSIM,
-             loss_mae_diff_SSIM_composite,
-             loss_mse_diff_SSIM_composite,
-             f1_metric],
+    metrics=[
+        "mae",
+        "mse",
+        "mape",
+        "cosine",
+        loss_SSIM,
+        loss_mae_diff_SSIM_composite,
+        loss_mse_diff_SSIM_composite,
+        f1_metric,
+    ],
     checkpoint_metric="val_loss",
 )
 
@@ -53,5 +58,4 @@ model_multi_class.load_data(batch_size=batch_size)
 final_model1, final_model1_weights = model_multi_class.run(size_step, size_epoch)
 
 # Update this folder path to the folder contain HOLDOUT images.
-#model_multi_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")
-
+# model_multi_class.predict(final_model1_weights, r"C:\Git\MarkerTrainer\data_test_results_2019-09-22T013003EST")
