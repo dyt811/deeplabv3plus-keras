@@ -46,6 +46,15 @@ Kaggle competition board.
 
 Two major goals of today: reverse IO, and maybe add a secondary balance weighted binary cross entropy function for better loss alternative than MSE.
 
+2019-10-09T080743EST
+Got the additional lossfn working. Time to tackle the reverse IO isssue for CSV submission for ServalStal
 
+2019-10-14T073649EST
+Reverse IO function has been adopted. However, it has not been tested to see how well it reconstitute the label CSV. I need to validate it against the existing training images to see if anything changes. 
 
 Another thing I want to clarify is the reuse of the data and whether the shuffling is working. 
+
+2019-10-21T210159EST
+I have been away for a while and losing momentum on this. :(
+
+We now have a models at least. Making shitty prediction but I should at least try to submit something. 
