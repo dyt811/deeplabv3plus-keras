@@ -47,11 +47,12 @@ def predict_image(path_input_model_weight: str, input_image):
     print("COMPLETED")
 
 
-def predict_folder(path_model_weights: str, input_folder: str):
+def predict_folder(path_model_weights: str, input_folder: str, path_output: Path=Path(r"C:\Git\MarkerTrainer\data_servestal\test_out")):
     """
     Folder version of the prediction function provided above, however, it also convert the results to CSV.
     :param input_model: the model to be used for prediction
     :param input_folder: input folder full of Servestal images.
+    Will writeoutput to the folder with the POST FIX OUTPUT
     """
 
     # Load model
@@ -71,7 +72,7 @@ def predict_folder(path_model_weights: str, input_folder: str):
         if (
             "JPEG" not in file.upper()
             and "PNG" not in file.upper()
-            and "JPEG" not in file.upper()
+            and "JPG" not in file.upper()
         ):
             continue
 
@@ -88,9 +89,17 @@ def predict_folder(path_model_weights: str, input_folder: str):
         output = input_model.predict(images)
 
         gray_scale_matrix = np.squeeze(output).astype(np.uint8)
-        img = Image.fromarray(gray_scale_matrix)
-        # Path(input_image).Parent.join("Output_" + Path(input_image).name)
-        img.save(file + "_Output.jpg")
+
+        # Saving as NPY.
+        np.save(path_output / (Path(file).name + ".npy"), gray_scale_matrix)
+
+
+        """ Saveing as JPG 
+        for defect_class in range(4):
+            img = Image.fromarray(gray_scale_matrix[:, :, defect_class])
+            # Path(input_image).Parent.join("Output_" + Path(input_image).name)
+            img.save(file + f"_{defect_class}.jpg")
+        """
 
     write_JSON_records(path_model_weights, list_files, input_folder)
 
@@ -134,6 +143,11 @@ def predict_CSV(path_NPY: Path, path_csv: Path):
         tuple_order_length = sum(list_order_length, ())
         list_RLE = list(tuple_order_length)
 
+        str_RLE = " ".join(repr(e) for e in list_RLE)
+
+        # Remove comma from string
+        #str_RLE = str_RLE.replace(",", "")
+
         file_exists = path_csv.exists()
         # Open file
         with open(path_csv, "a", newline="") as csv_file:
@@ -145,7 +159,7 @@ def predict_CSV(path_NPY: Path, path_csv: Path):
                 csv_writer.writeheader()
             # Write file/class ID and then the list of EncodedPixels
             csv_writer.writerow({"ImageId_ClassId": name_image_file+"_"+str(class_defect+1),
-                                 "EncodedPixels": ", ".join(repr(e) for e in list_RLE)})
+                                 "EncodedPixels": str_RLE})
 
 def write_JSON_records(path_model, list_images, destination):
     """
@@ -162,7 +176,13 @@ def write_JSON_records(path_model, list_images, destination):
 
 
 if __name__ == "__main__":
+
     predict_CSVs(
-        Path(r"C:\Git\MarkerTrainer\data_servestal\label_NPY"),
-        Path(r"C:\Git\MarkerTrainer\data_servestal\test.csv")
+        Path(r"C:\Git\MarkerTrainer\data_servestal\test_out"),
+        Path(r"C:\Git\MarkerTrainer\data_servestal\test_out\output.csv")
     )
+    """
+    predict_folder(
+        path_model_weights=r"C:\Git\MarkerTrainer\models\2019-10-02T22_14_23.194370_FinalModelWeights_model.Kaggle_DeepLabV3Plus.ModelClassSpec.h5",
+        input_folder=r"C:\Git\MarkerTrainer\data_servestal\test_images")
+    """

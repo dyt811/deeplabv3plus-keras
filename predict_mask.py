@@ -71,7 +71,7 @@ def predict_folder(path_model_weights: str, input_folder: str):
         if (
             "JPEG" not in file.upper()
             and "PNG" not in file.upper()
-            and "JPEG" not in file.upper()
+            and "JPG" not in file.upper()
         ):
             continue
 

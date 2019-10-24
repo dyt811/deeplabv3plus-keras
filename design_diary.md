@@ -57,4 +57,12 @@ Another thing I want to clarify is the reuse of the data and whether the shuffli
 2019-10-21T210159EST
 I have been away for a while and losing momentum on this. :(
 
-We now have a models at least. Making shitty prediction but I should at least try to submit something. 
+We now have a models at least. Making shitty prediction but I should at least try to submit something.
+
+2019-10-22T214816EST
+Just completed the prediction IO to CSV in my current routine.  
+Cross check of same images encoding decoding check resulted in different things... Fffffff...T
+This is very concerning as this means there is a bug in the encoder...
+
+2019-10-22T235150EST
+Further evaluation suggests there was 257 unites of displaycement, i.e. 1 column + 1 cell. Off by one in BOTH dimensions. This likely occurred early as the RLE encoding part is very precise and unlikely to be errored. 
