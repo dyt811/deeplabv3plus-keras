@@ -30,7 +30,9 @@ num_classes = 4
 size_epoch = 7500
 size_step = 2
 
-train_data_path = Path(r"C:\Git\MarkerTrainer\data_servestal\labelled_images")  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
+train_data_path = Path(
+    r"C:\Git\MarkerTrainer\data_servestal\labelled_images"
+)  # this folder MUST contain a LABEL folder and a TRAIN folder of flat images WITH IDENTICAL NAME-label pair.
 
 # Model creation:
 model_multi_class = DeepLabV3PlusCNN_I2D_O2D(

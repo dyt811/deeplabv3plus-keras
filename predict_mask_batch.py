@@ -34,6 +34,14 @@ def predict_folder_batch(path_models: List[str], path_input: str, path_output: P
 
 
 if __name__ == "__main__":
-    models = recursive_list(r"C:\BatchModelTesting\models")
-    path_output = Path(r"C:\BatchModelTesting")
-    predict_folder_batch(models, r"C:\BatchModelTesting\test_sets", path_output)
+    models = recursive_list(
+        r"C:\Users\Yang Ding\Desktop\Stockwell\model_test_folder\models_v2"
+    )
+    path_output = Path(
+        r"C:\Users\Yang Ding\Desktop\Stockwell\model_test_folder\Test_Automated\model_v2"
+    )
+    predict_folder_batch(
+        models,
+        r"C:\Users\Yang Ding\Desktop\Stockwell\model_test_folder\Image_TestSet",
+        path_output,
+    )
