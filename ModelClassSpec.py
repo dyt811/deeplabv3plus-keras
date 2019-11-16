@@ -56,16 +56,18 @@ class DeepLabV3PlusCNN_I2D_O2D(CNN_model):
 
         # Default metrics
         if metrics is None:
-            self.metrics = [
-                "mae",
-                "mse",
-                "mape",
-                "cosine",
-                loss_SSIM,
-                loss_mae_diff_SSIM_composite,
-                loss_mse_diff_SSIM_composite,
-                f1_metric,
-            ],
+            self.metrics = (
+                [
+                    "mae",
+                    "mse",
+                    "mape",
+                    "cosine",
+                    loss_SSIM,
+                    loss_mae_diff_SSIM_composite,
+                    loss_mse_diff_SSIM_composite,
+                    f1_metric,
+                ],
+            )
         else:
             self.metrics = metrics
 

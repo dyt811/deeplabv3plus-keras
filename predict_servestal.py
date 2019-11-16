@@ -16,6 +16,7 @@ from pathlib import Path
 shape_images = (256, 1600, 3)
 classes = 4
 
+
 def predict_image(path_input_model_weight: str, input_image):
     """
     Use the provided model weight to predice the image segmentation output
@@ -47,7 +48,11 @@ def predict_image(path_input_model_weight: str, input_image):
     print("COMPLETED")
 
 
-def predict_folder(path_model_weights: str, input_folder: str, path_output: Path=Path(r"C:\Git\MarkerTrainer\data_servestal\test_out")):
+def predict_folder(
+    path_model_weights: str,
+    input_folder: str,
+    path_output: Path = Path(r"C:\Git\MarkerTrainer\data_servestal\test_out"),
+):
     """
     Folder version of the prediction function provided above, however, it also convert the results to CSV.
     :param input_model: the model to be used for prediction
@@ -93,7 +98,6 @@ def predict_folder(path_model_weights: str, input_folder: str, path_output: Path
         # Saving as NPY.
         np.save(path_output / (Path(file).name + ".npy"), gray_scale_matrix)
 
-
         """ Saveing as JPG 
         for defect_class in range(4):
             img = Image.fromarray(gray_scale_matrix[:, :, defect_class])
@@ -105,6 +109,7 @@ def predict_folder(path_model_weights: str, input_folder: str, path_output: Path
 
     print("Test folder prediction completed. ")
 
+
 def predict_CSVs(path_NPYs: Path, path_csv: Path):
     """
     Predict all the NPYs in a folder, into csv output at a location
@@ -113,9 +118,10 @@ def predict_CSVs(path_NPYs: Path, path_csv: Path):
     :return:
     """
     assert path_NPYs.is_dir()
-    files = recursive_list_re(path_NPYs, 'npy')
+    files = recursive_list_re(path_NPYs, "npy")
     for file in tqdm(files):
         predict_CSV(Path(file), path_csv)
+
 
 def predict_CSV(path_NPY: Path, path_csv: Path):
     """
@@ -128,7 +134,7 @@ def predict_CSV(path_NPY: Path, path_csv: Path):
 
     assert path_NPY.suffix == ".npy"
     name_image_file = path_NPY.stem
-    #name_file = Path(name_image_file).stem
+    # name_file = Path(name_image_file).stem
 
     # Make sure there are 4 layers, one for each defect.
     assert ground_truth.shape[2] == 4
@@ -146,7 +152,7 @@ def predict_CSV(path_NPY: Path, path_csv: Path):
         str_RLE = " ".join(repr(e) for e in list_RLE)
 
         # Remove comma from string
-        #str_RLE = str_RLE.replace(",", "")
+        # str_RLE = str_RLE.replace(",", "")
 
         file_exists = path_csv.exists()
         # Open file
@@ -158,8 +164,13 @@ def predict_CSV(path_NPY: Path, path_csv: Path):
             if not file_exists:
                 csv_writer.writeheader()
             # Write file/class ID and then the list of EncodedPixels
-            csv_writer.writerow({"ImageId_ClassId": name_image_file+"_"+str(class_defect+1),
-                                 "EncodedPixels": str_RLE})
+            csv_writer.writerow(
+                {
+                    "ImageId_ClassId": name_image_file + "_" + str(class_defect + 1),
+                    "EncodedPixels": str_RLE,
+                }
+            )
+
 
 def write_JSON_records(path_model, list_images, destination):
     """
@@ -179,7 +190,7 @@ if __name__ == "__main__":
 
     predict_CSVs(
         Path(r"C:\Git\MarkerTrainer\data_servestal\test_out"),
-        Path(r"C:\Git\MarkerTrainer\data_servestal\test_out\output.csv")
+        Path(r"C:\Git\MarkerTrainer\data_servestal\test_out\output.csv"),
     )
     """
     predict_folder(
